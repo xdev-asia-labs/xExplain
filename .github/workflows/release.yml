@@ -1,0 +1,66 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-release:
+        runs-on: macos-14
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Swift
+              uses: swift-actions/setup-swift@v2
+              with:
+                  swift-version: "5.9"
+
+            - name: Get version
+              id: version
+              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            - name: Build Release (arm64)
+              run: swift build -c release --arch arm64
+
+            - name: Build Release (x86_64)
+              run: swift build -c release --arch x86_64
+
+            - name: Create Universal Binary
+              run: |
+                  mkdir -p .build/release
+                  lipo -create \
+                    .build/arm64-apple-macosx/release/xExplain-CLI \
+                    .build/x86_64-apple-macosx/release/xExplain-CLI \
+                    -output .build/release/xexplain
+                  chmod +x .build/release/xexplain
+
+            - name: Create tarball
+              run: |
+                  cd .build/release
+                  tar -czvf xexplain-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz xexplain
+                  shasum -a 256 xexplain-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz > sha256.txt
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      .build/release/xexplain-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz
+                      .build/release/sha256.txt
+                  generate_release_notes: true
+
+    update-homebrew:
+        needs: build-and-release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get version
+              id: version
+              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            - name: Trigger Homebrew tap update
+              run: |
+                  echo "Release ${{ steps.version.outputs.VERSION }} created!"
+                  echo "Update Homebrew tap manually or via repository_dispatch"
