@@ -30,8 +30,10 @@ struct TerminalUI {
     
     // Clear and cursor control
     static let clearScreen = "\u{001B}[2J\u{001B}[H"
+    static let homePosition = "\u{001B}[H"  // Move cursor to home without clearing
     static let hideCursor = "\u{001B}[?25l"
     static let showCursor = "\u{001B}[?25h"
+    static let clearToEnd = "\u{001B}[J"   // Clear from cursor to end of screen
     
     static func moveTo(_ row: Int, _ col: Int) -> String {
         return "\u{001B}[\(row);\(col)H"
@@ -175,7 +177,7 @@ class TerminalMonitor {
         case .pid: processes.sort(by: { $0.id < $1.id })
         }
         
-        var output = TerminalUI.clearScreen
+        var output = TerminalUI.homePosition
         
         // === HEADER ===
         let time = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
@@ -295,7 +297,7 @@ class CPUMonitor {
         history.append(metrics.cpuUsage)
         if history.count > 80 { history.removeFirst() }
         
-        var output = TerminalUI.clearScreen
+        var output = TerminalUI.homePosition
         
         // Header
         let time = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
@@ -367,7 +369,7 @@ class GPUMonitor {
         history.append(metrics.gpuUsage)
         if history.count > 80 { history.removeFirst() }
         
-        var output = TerminalUI.clearScreen
+        var output = TerminalUI.homePosition
         
         // Header
         let time = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
