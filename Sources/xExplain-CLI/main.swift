@@ -41,10 +41,18 @@ struct XExplainCLI {
             case "--help", "-h":
                 printHelp()
                 exit(0)
+            case "--version", "-v":
+                printVersion()
+                exit(0)
             default:
                 break
             }
         }
+    }
+    
+    static func printVersion() {
+        print("xExplain CLI v\(Version.current)")
+        print("Build: \(Version.buildDate) (\(Version.gitCommit))")
     }
     
     static func printHelp() {
@@ -59,6 +67,7 @@ struct XExplainCLI {
           --json, -j        Output in JSON format
           --interval, -i N  Update interval in seconds (default: 2)
           --help, -h        Show this help
+          --version, -v     Show version
         
         Examples:
           xExplain-CLI                    # Run once
