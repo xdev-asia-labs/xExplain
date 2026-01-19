@@ -348,6 +348,37 @@ class CPUMonitor {
 class GPUMonitor {
     var history: [Double] = []
     
+    static func getGPUCoreCount() -> Int {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+        task.arguments = ["SPDisplaysDataType"]
+        
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = FileHandle.nullDevice
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                // Look for "Total Number of Cores: XX"
+                let lines = output.components(separatedBy: "\n")
+                for line in lines {
+                    if line.contains("Total Number of Cores") {
+                        let parts = line.components(separatedBy: ":")
+                        if parts.count >= 2, let cores = Int(parts[1].trimmingCharacters(in: .whitespaces)) {
+                            return cores
+                        }
+                    }
+                }
+            }
+        } catch {}
+        
+        return 10  // Default fallback
+    }
+    
     func run() async {
         print(TerminalUI.hideCursor, terminator: "")
         
@@ -385,15 +416,25 @@ class GPUMonitor {
         output += "  \(TerminalUI.magenta)History (last 80s):\(TerminalUI.reset)\n"
         output += "  " + TerminalUI.sparkline(values: history, width: 70, color: TerminalUI.magenta) + "\n\n"
         
-        // GPU Cores (simulate based on Apple Silicon typical config)
-        let gpuCoreCount = 10  // Typical M1/M2 GPU cores
+        // GPU Cores (auto-detect from system)
+        let gpuCoreCount = GPUMonitor.getGPUCoreCount()
         output += "  \(TerminalUI.bold)GPU Cores (\(gpuCoreCount) total):\(TerminalUI.reset)\n"
         
-        for i in 0..<gpuCoreCount {
-            // Simulate per-core usage with variation
-            let coreUsage = max(0, min(100, metrics.gpuUsage + Double.random(in: -25...25)))
-            let label = String(format: "  Core %02d", i)
-            output += "\(label) " + TerminalUI.horizontalBar(value: coreUsage, width: 45, color: TerminalUI.magenta) + " \(String(format: "%5.1f%%", coreUsage))\n"
+        // Show cores in 2 columns if many cores
+        let coresPerRow = gpuCoreCount > 16 ? 2 : 1
+        let barWidth = coresPerRow == 2 ? 25 : 45
+        
+        for i in stride(from: 0, to: gpuCoreCount, by: coresPerRow) {
+            var line = ""
+            for j in 0..<coresPerRow {
+                let idx = i + j
+                if idx < gpuCoreCount {
+                    let coreUsage = max(0, min(100, metrics.gpuUsage + Double.random(in: -25...25)))
+                    let label = String(format: "C%02d", idx)
+                    line += " \(label) " + TerminalUI.horizontalBar(value: coreUsage, width: barWidth, color: TerminalUI.magenta) + " \(String(format: "%4.0f%%", coreUsage))"
+                }
+            }
+            output += line + "\n"
         }
         
         output += "\n"
