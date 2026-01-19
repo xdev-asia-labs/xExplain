@@ -11,6 +11,8 @@ struct XExplainCLI {
     // MARK: - Command Line Arguments
     static var watchMode = false
     static var monitorMode = false
+    static var cpuMode = false
+    static var gpuMode = false
     static var jsonOutput = false
     static var watchInterval: TimeInterval = 2.0
     
@@ -19,6 +21,10 @@ struct XExplainCLI {
         
         if jsonOutput {
             await runJSONMode()
+        } else if cpuMode {
+            await CPUMonitor().run()
+        } else if gpuMode {
+            await GPUMonitor().run()
         } else if monitorMode {
             await TerminalMonitor().run()
         } else if watchMode {
@@ -37,6 +43,10 @@ struct XExplainCLI {
                 watchMode = true
             case "--monitor", "-m":
                 monitorMode = true
+            case "--cpu":
+                cpuMode = true
+            case "--gpu":
+                gpuMode = true
             case "--json", "-j":
                 jsonOutput = true
             case "--interval", "-i":
@@ -68,7 +78,9 @@ struct XExplainCLI {
         Usage: xExplain-CLI [options]
         
         Options:
-          --monitor, -m     htop-like terminal monitor (NEW!)
+          --monitor, -m     Full system monitor (btop-like)
+          --cpu             CPU detailed monitor
+          --gpu             GPU detailed monitor
           --watch, -w       Continuous monitoring mode
           --json, -j        Output in JSON format
           --interval, -i N  Update interval in seconds (default: 2)
