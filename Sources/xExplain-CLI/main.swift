@@ -10,6 +10,7 @@ struct XExplainCLI {
     
     // MARK: - Command Line Arguments
     static var watchMode = false
+    static var monitorMode = false
     static var jsonOutput = false
     static var watchInterval: TimeInterval = 2.0
     
@@ -18,6 +19,8 @@ struct XExplainCLI {
         
         if jsonOutput {
             await runJSONMode()
+        } else if monitorMode {
+            await TerminalMonitor().run()
         } else if watchMode {
             await runWatchMode()
         } else {
@@ -32,6 +35,8 @@ struct XExplainCLI {
             switch arg {
             case "--watch", "-w":
                 watchMode = true
+            case "--monitor", "-m":
+                monitorMode = true
             case "--json", "-j":
                 jsonOutput = true
             case "--interval", "-i":
@@ -63,6 +68,7 @@ struct XExplainCLI {
         Usage: xExplain-CLI [options]
         
         Options:
+          --monitor, -m     htop-like terminal monitor (NEW!)
           --watch, -w       Continuous monitoring mode
           --json, -j        Output in JSON format
           --interval, -i N  Update interval in seconds (default: 2)

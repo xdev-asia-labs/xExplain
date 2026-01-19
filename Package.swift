@@ -32,7 +32,8 @@ let package = Package(
         .executableTarget(
             name: "xExplain-CLI",
             dependencies: ["xExplain"],
-            path: "Sources/xExplain-CLI"
+            path: "Sources/xExplain-CLI",
+            swiftSettings: [.unsafeFlags(["-parse-as-library"])]
         ),
         .testTarget(
             name: "xExplainTests",
