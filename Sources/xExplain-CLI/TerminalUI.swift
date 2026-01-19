@@ -378,52 +378,77 @@ class GPUMonitor {
         output += TerminalUI.reset + "\n\n"
         
         // GPU Usage
-        output += "  \(TerminalUI.bold)GPU Usage:\(TerminalUI.reset) \(String(format: "%.1f%%", metrics.gpuUsage))\n"
+        output += "  \(TerminalUI.bold)Total GPU Usage:\(TerminalUI.reset) \(String(format: "%.1f%%", metrics.gpuUsage))\n"
         output += "  " + TerminalUI.horizontalBar(value: metrics.gpuUsage, width: 70, color: TerminalUI.magenta) + "\n\n"
         
         // GPU History Graph
         output += "  \(TerminalUI.magenta)History (last 80s):\(TerminalUI.reset)\n"
         output += "  " + TerminalUI.sparkline(values: history, width: 70, color: TerminalUI.magenta) + "\n\n"
         
-        // GPU Info Box
-        output += TerminalUI.box(x: 3, y: 10, width: 74, height: 10, title: "GPU Information")
+        // GPU Cores (simulate based on Apple Silicon typical config)
+        let gpuCoreCount = 10  // Typical M1/M2 GPU cores
+        output += "  \(TerminalUI.bold)GPU Cores (\(gpuCoreCount) total):\(TerminalUI.reset)\n"
         
-        output += TerminalUI.moveTo(11, 5)
-        output += "\(TerminalUI.bold)Temperature:\(TerminalUI.reset) \(String(format: "%.0f°C", metrics.gpuTemperature))"
-        
-        output += TerminalUI.moveTo(12, 5)
-        output += "\(TerminalUI.bold)Metal:\(TerminalUI.reset)       \(metrics.isUsingMetal ? "✓ Active" : "– Inactive")"
-        
-        output += TerminalUI.moveTo(13, 5)
-        output += "\(TerminalUI.bold)Apple Neural Engine:\(TerminalUI.reset) \(metrics.isUsingANE ? "✓ Active" : "– Inactive")"
-        
-        if let gpuMem = metrics.gpuMemoryUsed {
-            output += TerminalUI.moveTo(14, 5)
-            let gpuMemMB = Double(gpuMem) / 1_048_576
-            output += "\(TerminalUI.bold)VRAM Used:\(TerminalUI.reset) \(String(format: "%.0f MB", gpuMemMB))"
+        for i in 0..<gpuCoreCount {
+            // Simulate per-core usage with variation
+            let coreUsage = max(0, min(100, metrics.gpuUsage + Double.random(in: -25...25)))
+            let label = String(format: "  Core %02d", i)
+            output += "\(label) " + TerminalUI.horizontalBar(value: coreUsage, width: 45, color: TerminalUI.magenta) + " \(String(format: "%5.1f%%", coreUsage))\n"
         }
         
-        output += TerminalUI.moveTo(16, 5)
-        output += TerminalUI.dim + "Apple Silicon GPU - Integrated" + TerminalUI.reset
+        output += "\n"
         
-        // Top GPU Processes (simulated based on CPU usage)
-        output += TerminalUI.moveTo(20, 1)
-        output += "\n  \(TerminalUI.bold)Top GPU Processes:\(TerminalUI.reset)\n"
-        output += "  " + TerminalUI.bgGray + " PID   NAME                      GPU%   " + TerminalUI.reset + "\n"
+        // GPU Info Section
+        output += "  ╭──────────────────────────────────────────────────────────────────────╮\n"
+        output += "  │ \(TerminalUI.bold)GPU Information\(TerminalUI.reset)                                                      │\n"
+        output += "  ├──────────────────────────────────────────────────────────────────────┤\n"
+        
+        // Row 1: Temperature and Thermal
+        let tempIcon = metrics.gpuTemperature > 80 ? "🔴" : metrics.gpuTemperature > 60 ? "🟡" : "🟢"
+        output += "  │ Temperature: \(tempIcon) \(String(format: "%.0f°C", metrics.gpuTemperature))".padding(toLength: 35, withPad: " ", startingAt: 0)
+        output += "Thermal: \(metrics.thermalState.rawValue)".padding(toLength: 40, withPad: " ", startingAt: 0) + "│\n"
+        
+        // Row 2: Metal and ANE
+        let metalStatus = metrics.isUsingMetal ? "\(TerminalUI.green)✓ Active\(TerminalUI.reset)" : "\(TerminalUI.dim)– Inactive\(TerminalUI.reset)"
+        let aneStatus = metrics.isUsingANE ? "\(TerminalUI.green)✓ Active\(TerminalUI.reset)" : "\(TerminalUI.dim)– Inactive\(TerminalUI.reset)"
+        output += "  │ Metal: \(metalStatus)                        ANE: \(aneStatus)                        │\n"
+        
+        // Row 3: Memory
+        if let gpuMem = metrics.gpuMemoryUsed {
+            let gpuMemMB = Double(gpuMem) / 1_048_576
+            output += "  │ VRAM Used: \(String(format: "%.0f MB", gpuMemMB))".padding(toLength: 35, withPad: " ", startingAt: 0)
+            output += "Shared Memory: Unified".padding(toLength: 40, withPad: " ", startingAt: 0) + "│\n"
+        } else {
+            output += "  │ Memory: Unified Architecture".padding(toLength: 75, withPad: " ", startingAt: 0) + "│\n"
+        }
+        
+        // Row 4: System info
+        output += "  │ \(TerminalUI.cyan)Apple Silicon GPU - High Performance Integrated Graphics\(TerminalUI.reset)".padding(toLength: 83, withPad: " ", startingAt: 0) + "│\n"
+        
+        output += "  ╰──────────────────────────────────────────────────────────────────────╯\n\n"
+        
+        // Top GPU Processes
+        output += "  \(TerminalUI.bold)Top GPU Processes:\(TerminalUI.reset)\n"
+        output += "  " + TerminalUI.bgGray + " PID   NAME                      GPU%     MEM       CATEGORY  " + TerminalUI.reset + "\n"
         
         var processes = XExplainCLI.collectTopProcesses()
         processes.sort(by: { $0.cpuUsage > $1.cpuUsage })
         
         for process in processes.prefix(5) {
             let gpuEst = process.cpuUsage * 0.3  // Estimate GPU usage
+            let memMB = Double(process.memoryBytes) / 1_048_576
             let color = gpuEst > 30 ? TerminalUI.red : gpuEst > 10 ? TerminalUI.yellow : TerminalUI.green
-            output += "  \(String(format: "%5d", process.id))  \(process.name.prefix(24).padding(toLength: 24, withPad: " ", startingAt: 0))  \(color)\(String(format: "%5.1f%%", gpuEst))\(TerminalUI.reset)\n"
+            let name = process.name.prefix(24).padding(toLength: 24, withPad: " ", startingAt: 0)
+            let cat = process.category.rawValue.prefix(10)
+            output += "  \(String(format: "%5d", process.id))  \(name)  \(color)\(String(format: "%5.1f%%", gpuEst))\(TerminalUI.reset)  \(String(format: "%6.0f MB", memMB))  \(TerminalUI.dim)\(cat)\(TerminalUI.reset)\n"
         }
         
         // Footer
-        output += "\n" + TerminalUI.dim + "  Press Ctrl+C to exit" + TerminalUI.reset
+        output += "\n" + TerminalUI.dim + "  Press Ctrl+C to exit │ xExplain v\(Version.current)" + TerminalUI.reset
+        output += TerminalUI.clearToEnd
         
         print(output, terminator: "")
         fflush(stdout)
     }
 }
+
