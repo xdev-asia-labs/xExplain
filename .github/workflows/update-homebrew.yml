@@ -1,0 +1,35 @@
+name: Update Homebrew
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Download and hash
+        id: hash
+        run: |
+          curl -sL "https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz" -o release.tar.gz
+          SHA256=$(sha256sum release.tar.gz | cut -d' ' -f1)
+          echo "SHA256=$SHA256" >> $GITHUB_OUTPUT
+          
+      - name: Update Homebrew tap
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          repository: xdev-asia-labs/homebrew-tap
+          event-type: update-formula
+          client-payload: |
+            {
+              "version": "${{ steps.release.outputs.VERSION }}",
+              "sha256": "${{ steps.hash.outputs.SHA256 }}",
+              "tag": "${{ github.ref_name }}"
+            }
