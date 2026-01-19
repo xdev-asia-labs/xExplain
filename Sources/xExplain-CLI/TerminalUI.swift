@@ -181,17 +181,10 @@ class TerminalMonitor {
         
         // Process table header
         output += "\n"
-        let sortIndicator: (SortColumn) -> String = { col in
-            self.sortBy == col ? " ▼" : ""
-        }
+        let cpuSort = sortBy == .cpu ? " ▼" : ""
+        let memSort = sortBy == .memory ? " ▼" : ""
         output += TerminalUI.bgGray + TerminalUI.white
-        output += String(format: " %5s  %-25s  %8s%@  %10s%@  %-10s ",
-            "PID",
-            "NAME",
-            "CPU%", sortIndicator(.cpu),
-            "MEM", sortIndicator(.memory),
-            "CATEGORY"
-        )
+        output += "  PID   NAME                       CPU%\(cpuSort)      MEM\(memSort)    CATEGORY   "
         output += TerminalUI.reset + "\n"
         
         // Process list
