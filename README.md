@@ -29,7 +29,7 @@ swift build -c release
 .build/release/xExplain-CLI --monitor
 ```
 
-### Homebrew (Coming Soon)
+### Homebrew
 ```bash
 brew tap xdev-asia-labs/tap
 brew install xexplain
