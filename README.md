@@ -1,28 +1,84 @@
 # xExplain
 
-> 🧠 System Intelligence Library for macOS - The "System Brain"
+> 🧠 System Intelligence Library & CLI for macOS - The "System Brain"
 
 **xExplain** is a Swift Package that provides intelligent system analysis with **counterfactual reasoning**. It's the shared core for the xInsight ecosystem (xInsight, xInsight Dev, xThermal).
 
-## Key Features
+## ✨ Showcase
 
-- **Counterfactual Analysis**: "What if I quit this app?" → "CPU will drop by 31%"
-- **Confidence Scoring**: Know how reliable each insight is (0.0 - 1.0)
-- **Audience Targeting**: Consumer, Developer, Power User insights
-- **Thermal Forecasting**: Predict when throttling will occur
-- **11 Built-in Rules**: CPU, Memory, I/O, Thermal, Dev Loop, Core Imbalance, ML Workload, etc.
+### Full System Monitor (btop-like)
+![Full Monitor](showcase/full-iu.png)
 
-## Installation
+### CPU Monitor - Per-core Performance
+![CPU Monitor](showcase/cpu.png)
+
+### GPU Monitor - Apple Silicon 30 Cores
+![GPU Monitor](showcase/gpu.png)
+
+---
+
+## 🚀 Quick Install
+
+```bash
+# Clone and build
+git clone https://github.com/xdev-asia-labs/xExplain.git
+cd xExplain
+swift build -c release
+
+# Run
+.build/release/xExplain-CLI --monitor
+```
+
+### Homebrew (Coming Soon)
+```bash
+brew tap xdev-asia-labs/tap
+brew install xexplain
+```
+
+---
+
+## 🖥 CLI Commands
+
+```bash
+xexplain                  # Run once - quick system analysis
+xexplain --monitor, -m    # Full system monitor (btop-like)
+xexplain --cpu            # CPU detailed monitor with per-core bars
+xexplain --gpu            # GPU detailed monitor with all cores
+xexplain --watch, -w      # Continuous text monitoring mode
+xexplain --json, -j       # Output in JSON format
+xexplain --interval N     # Set update interval (seconds)
+xexplain --version, -v    # Show version
+xexplain --help, -h       # Show help
+```
+
+---
+
+## 📦 Library Installation
 
 ### Swift Package Manager
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/xdev-asia/xExplain.git", from: "1.0.0")
+    .package(url: "https://github.com/xdev-asia-labs/xExplain.git", from: "1.0.0")
 ]
 ```
 
-## Quick Start
+---
+
+## 🔧 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔮 **Counterfactual Analysis** | "What if I quit this app?" → "CPU will drop by 31%" |
+| 📊 **Confidence Scoring** | Know how reliable each insight is (0.0 - 1.0) |
+| 👤 **Audience Targeting** | Consumer, Developer, Power User insights |
+| 🌡 **Thermal Forecasting** | Predict when throttling will occur |
+| 📈 **Real-time Metrics** | CPU, GPU, Memory, Disk, Network monitoring |
+| 🎮 **GPU Core Detection** | Auto-detect and display all GPU cores |
+
+---
+
+## 💻 Library Quick Start
 
 ```swift
 import xExplain
@@ -30,8 +86,9 @@ import xExplain
 // Get the engine
 let engine = ExplainEngine.shared
 
-// Register developer rules (optional)
+// Register rules
 engine.registerRules(for: .developer)
+engine.registerRules(for: .power)
 
 // Analyze system state
 let insights = engine.analyze(
@@ -55,27 +112,40 @@ if let forecast = engine.thermalForecast(currentMetrics: metrics) {
 }
 ```
 
-## Architecture
+---
+
+## 🏗 Architecture
 
 ```
 xExplain/
-├── Core/
-│   ├── ExplainEngine.swift        # Main analysis engine
-│   ├── CorrelationEngine.swift    # Metric-process correlations
-│   ├── AnomalyDetector.swift      # Statistical anomaly detection
-│   ├── CounterfactualAnalyzer.swift # "What if" analysis
-│   └── ConfidenceScorer.swift     # Confidence adjustment
-├── Models/
-│   ├── ExplainInsight.swift       # Core insight model
-│   └── SystemModels.swift         # Metrics & process models
-└── Rules/
-    ├── RuleProtocol.swift
-    ├── Consumer/                   # Basic insights
-    ├── Developer/                  # Dev-focused insights
-    └── Thermal/                    # Power user insights
+├── Sources/
+│   ├── xExplain/                    # Core library
+│   │   ├── Core/
+│   │   │   ├── ExplainEngine.swift        # Main analysis engine
+│   │   │   ├── CorrelationEngine.swift    # Metric-process correlations
+│   │   │   ├── AnomalyDetector.swift      # Statistical anomaly detection
+│   │   │   ├── CounterfactualAnalyzer.swift
+│   │   │   └── ConfidenceScorer.swift
+│   │   ├── Models/
+│   │   │   ├── ExplainInsight.swift
+│   │   │   └── SystemModels.swift
+│   │   └── Rules/
+│   │       ├── Consumer/            # Basic insights
+│   │       ├── Developer/           # Dev-focused insights
+│   │       └── Thermal/             # Power user insights
+│   └── xExplain-CLI/                # CLI Tool
+│       ├── main.swift
+│       └── TerminalUI.swift         # btop-like UI
+├── Tests/
+├── homebrew/                        # Homebrew formula
+└── .github/workflows/               # CI/CD
+    ├── ci.yml
+    └── release.yml
 ```
 
-## Built-in Rules
+---
+
+## 📋 Built-in Rules
 
 ### Consumer (Always Active)
 | Rule | Trigger | Description |
@@ -100,7 +170,9 @@ xExplain/
 | Energy Inefficiency | Many low-CPU wake-ups | Battery drain pattern |
 | Thermal Forecast | Rising temperature trend | Predict throttling time |
 
-## Counterfactual Analysis
+---
+
+## 🔬 Counterfactual Analysis
 
 The key differentiator of xExplain:
 
@@ -122,6 +194,33 @@ struct Counterfactual {
 }
 ```
 
-## License
+---
 
-MIT License - © 2026 xdev.asia
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This software is free to use for personal and commercial purposes.  
+**Redistribution for commercial gain is prohibited.**
+
+See [LICENSE.md](LICENSE.md) for details.
+
+---
+
+## 🔗 Links
+
+- **xInsight**: Full macOS monitoring app (uses xExplain)
+- **xInsight Lite**: Free version for basic monitoring
+- **xdev.asia**: https://xdev.asia
+
+---
+
+Made with ❤️ by [xdev.asia](https://xdev.asia) © 2026
